@@ -1,6 +1,50 @@
 /******/ (function(modules) { // webpackBootstrap
+/******/ 	// install a JSONP callback for chunk loading
+/******/ 	function webpackJsonpCallback(data) {
+/******/ 		var chunkIds = data[0];
+/******/ 		var moreModules = data[1];
+/******/
+/******/
+/******/ 		// add "moreModules" to the modules object,
+/******/ 		// then flag all "chunkIds" as loaded and fire callback
+/******/ 		var moduleId, chunkId, i = 0, resolves = [];
+/******/ 		for(;i < chunkIds.length; i++) {
+/******/ 			chunkId = chunkIds[i];
+/******/ 			if(Object.prototype.hasOwnProperty.call(installedChunks, chunkId) && installedChunks[chunkId]) {
+/******/ 				resolves.push(installedChunks[chunkId][0]);
+/******/ 			}
+/******/ 			installedChunks[chunkId] = 0;
+/******/ 		}
+/******/ 		for(moduleId in moreModules) {
+/******/ 			if(Object.prototype.hasOwnProperty.call(moreModules, moduleId)) {
+/******/ 				modules[moduleId] = moreModules[moduleId];
+/******/ 			}
+/******/ 		}
+/******/ 		if(parentJsonpFunction) parentJsonpFunction(data);
+/******/
+/******/ 		while(resolves.length) {
+/******/ 			resolves.shift()();
+/******/ 		}
+/******/
+/******/ 	};
+/******/
+/******/
 /******/ 	// The module cache
 /******/ 	var installedModules = {};
+/******/
+/******/ 	// object to store loaded and loading chunks
+/******/ 	// undefined = chunk not loaded, null = chunk preloaded/prefetched
+/******/ 	// Promise = chunk loading, 0 = chunk loaded
+/******/ 	var installedChunks = {
+/******/ 		"main": 0
+/******/ 	};
+/******/
+/******/
+/******/
+/******/ 	// script path function
+/******/ 	function jsonpScriptSrc(chunkId) {
+/******/ 		return __webpack_require__.p + "js/" + chunkId + ".index.js"
+/******/ 	}
 /******/
 /******/ 	// The require function
 /******/ 	function __webpack_require__(moduleId) {
@@ -26,6 +70,67 @@
 /******/ 		return module.exports;
 /******/ 	}
 /******/
+/******/ 	// This file contains only the entry chunk.
+/******/ 	// The chunk loading function for additional chunks
+/******/ 	__webpack_require__.e = function requireEnsure(chunkId) {
+/******/ 		var promises = [];
+/******/
+/******/
+/******/ 		// JSONP chunk loading for javascript
+/******/
+/******/ 		var installedChunkData = installedChunks[chunkId];
+/******/ 		if(installedChunkData !== 0) { // 0 means "already installed".
+/******/
+/******/ 			// a Promise means "currently loading".
+/******/ 			if(installedChunkData) {
+/******/ 				promises.push(installedChunkData[2]);
+/******/ 			} else {
+/******/ 				// setup Promise in chunk cache
+/******/ 				var promise = new Promise(function(resolve, reject) {
+/******/ 					installedChunkData = installedChunks[chunkId] = [resolve, reject];
+/******/ 				});
+/******/ 				promises.push(installedChunkData[2] = promise);
+/******/
+/******/ 				// start chunk loading
+/******/ 				var script = document.createElement('script');
+/******/ 				var onScriptComplete;
+/******/
+/******/ 				script.charset = 'utf-8';
+/******/ 				script.timeout = 120;
+/******/ 				if (__webpack_require__.nc) {
+/******/ 					script.setAttribute("nonce", __webpack_require__.nc);
+/******/ 				}
+/******/ 				script.src = jsonpScriptSrc(chunkId);
+/******/
+/******/ 				// create error before stack unwound to get useful stacktrace later
+/******/ 				var error = new Error();
+/******/ 				onScriptComplete = function (event) {
+/******/ 					// avoid mem leaks in IE.
+/******/ 					script.onerror = script.onload = null;
+/******/ 					clearTimeout(timeout);
+/******/ 					var chunk = installedChunks[chunkId];
+/******/ 					if(chunk !== 0) {
+/******/ 						if(chunk) {
+/******/ 							var errorType = event && (event.type === 'load' ? 'missing' : event.type);
+/******/ 							var realSrc = event && event.target && event.target.src;
+/******/ 							error.message = 'Loading chunk ' + chunkId + ' failed.\n(' + errorType + ': ' + realSrc + ')';
+/******/ 							error.name = 'ChunkLoadError';
+/******/ 							error.type = errorType;
+/******/ 							error.request = realSrc;
+/******/ 							chunk[1](error);
+/******/ 						}
+/******/ 						installedChunks[chunkId] = undefined;
+/******/ 					}
+/******/ 				};
+/******/ 				var timeout = setTimeout(function(){
+/******/ 					onScriptComplete({ type: 'timeout', target: script });
+/******/ 				}, 120000);
+/******/ 				script.onerror = script.onload = onScriptComplete;
+/******/ 				document.head.appendChild(script);
+/******/ 			}
+/******/ 		}
+/******/ 		return Promise.all(promises);
+/******/ 	};
 /******/
 /******/ 	// expose the modules object (__webpack_modules__)
 /******/ 	__webpack_require__.m = modules;
@@ -78,6 +183,16 @@
 /******/
 /******/ 	// __webpack_public_path__
 /******/ 	__webpack_require__.p = "dist/";
+/******/
+/******/ 	// on error function for async loading
+/******/ 	__webpack_require__.oe = function(err) { console.error(err); throw err; };
+/******/
+/******/ 	var jsonpArray = window["webpackJsonp"] = window["webpackJsonp"] || [];
+/******/ 	var oldJsonpFunction = jsonpArray.push.bind(jsonpArray);
+/******/ 	jsonpArray.push = webpackJsonpCallback;
+/******/ 	jsonpArray = jsonpArray.slice();
+/******/ 	for(var i = 0; i < jsonpArray.length; i++) webpackJsonpCallback(jsonpArray[i]);
+/******/ 	var parentJsonpFunction = oldJsonpFunction;
 /******/
 /******/
 /******/ 	// Load entry module and return exports
@@ -3842,10 +3957,47 @@ eval("var g;\n\n// This works in non-strict mode\ng = (function() {\n\treturn th
 /*!*************************!*\
   !*** ./src/js/index.js ***!
   \*************************/
-/*! no static exports found */
-/***/ (function(module, exports) {
+/*! no exports provided */
+/***/ (function(module, __webpack_exports__, __webpack_require__) {
 
-eval("throw new Error(\"Module build failed (from ./node_modules/babel-loader/lib/index.js):\\nError: Cannot find module '@babel/core'\\nRequire stack:\\n- D:\\\\JavaScript Projects\\\\JavaScript Projects\\\\The Complete JavaScript Course 2019\\\\Forkify\\\\node_modules\\\\babel-loader\\\\lib\\\\index.js\\n- D:\\\\JavaScript Projects\\\\JavaScript Projects\\\\The Complete JavaScript Course 2019\\\\Forkify\\\\node_modules\\\\loader-runner\\\\lib\\\\loadLoader.js\\n- D:\\\\JavaScript Projects\\\\JavaScript Projects\\\\The Complete JavaScript Course 2019\\\\Forkify\\\\node_modules\\\\loader-runner\\\\lib\\\\LoaderRunner.js\\n- D:\\\\JavaScript Projects\\\\JavaScript Projects\\\\The Complete JavaScript Course 2019\\\\Forkify\\\\node_modules\\\\webpack\\\\lib\\\\NormalModule.js\\n- D:\\\\JavaScript Projects\\\\JavaScript Projects\\\\The Complete JavaScript Course 2019\\\\Forkify\\\\node_modules\\\\webpack\\\\lib\\\\NormalModuleFactory.js\\n- D:\\\\JavaScript Projects\\\\JavaScript Projects\\\\The Complete JavaScript Course 2019\\\\Forkify\\\\node_modules\\\\webpack\\\\lib\\\\Compiler.js\\n- D:\\\\JavaScript Projects\\\\JavaScript Projects\\\\The Complete JavaScript Course 2019\\\\Forkify\\\\node_modules\\\\webpack\\\\lib\\\\webpack.js\\n- D:\\\\JavaScript Projects\\\\JavaScript Projects\\\\The Complete JavaScript Course 2019\\\\Forkify\\\\node_modules\\\\webpack-cli\\\\bin\\\\utils\\\\validate-options.js\\n- D:\\\\JavaScript Projects\\\\JavaScript Projects\\\\The Complete JavaScript Course 2019\\\\Forkify\\\\node_modules\\\\webpack-cli\\\\bin\\\\utils\\\\convert-argv.js\\n- D:\\\\JavaScript Projects\\\\JavaScript Projects\\\\The Complete JavaScript Course 2019\\\\Forkify\\\\node_modules\\\\webpack-cli\\\\bin\\\\cli.js\\n- D:\\\\JavaScript Projects\\\\JavaScript Projects\\\\The Complete JavaScript Course 2019\\\\Forkify\\\\node_modules\\\\webpack\\\\bin\\\\webpack.js\\n babel-loader@8 requires Babel 7.x (the package '@babel/core'). If you'd like to use Babel 6.x ('babel-core'), you should install 'babel-loader@7'.\\n    at Function.Module._resolveFilename (internal/modules/cjs/loader.js:794:15)\\n    at Function.Module._load (internal/modules/cjs/loader.js:687:27)\\n    at Module.require (internal/modules/cjs/loader.js:849:19)\\n    at require (D:\\\\JavaScript Projects\\\\JavaScript Projects\\\\The Complete JavaScript Course 2019\\\\Forkify\\\\node_modules\\\\webpack-cli\\\\node_modules\\\\v8-compile-cache\\\\v8-compile-cache.js:161:20)\\n    at Object.<anonymous> (D:\\\\JavaScript Projects\\\\JavaScript Projects\\\\The Complete JavaScript Course 2019\\\\Forkify\\\\node_modules\\\\babel-loader\\\\lib\\\\index.js:10:11)\\n    at Module._compile (D:\\\\JavaScript Projects\\\\JavaScript Projects\\\\The Complete JavaScript Course 2019\\\\Forkify\\\\node_modules\\\\webpack-cli\\\\node_modules\\\\v8-compile-cache\\\\v8-compile-cache.js:192:30)\\n    at Object.Module._extensions..js (internal/modules/cjs/loader.js:973:10)\\n    at Module.load (internal/modules/cjs/loader.js:812:32)\\n    at Function.Module._load (internal/modules/cjs/loader.js:724:14)\\n    at Module.require (internal/modules/cjs/loader.js:849:19)\\n    at require (D:\\\\JavaScript Projects\\\\JavaScript Projects\\\\The Complete JavaScript Course 2019\\\\Forkify\\\\node_modules\\\\webpack-cli\\\\node_modules\\\\v8-compile-cache\\\\v8-compile-cache.js:161:20)\\n    at loadLoader (D:\\\\JavaScript Projects\\\\JavaScript Projects\\\\The Complete JavaScript Course 2019\\\\Forkify\\\\node_modules\\\\loader-runner\\\\lib\\\\loadLoader.js:18:17)\\n    at iteratePitchingLoaders (D:\\\\JavaScript Projects\\\\JavaScript Projects\\\\The Complete JavaScript Course 2019\\\\Forkify\\\\node_modules\\\\loader-runner\\\\lib\\\\LoaderRunner.js:169:2)\\n    at runLoaders (D:\\\\JavaScript Projects\\\\JavaScript Projects\\\\The Complete JavaScript Course 2019\\\\Forkify\\\\node_modules\\\\loader-runner\\\\lib\\\\LoaderRunner.js:365:2)\\n    at NormalModule.doBuild (D:\\\\JavaScript Projects\\\\JavaScript Projects\\\\The Complete JavaScript Course 2019\\\\Forkify\\\\node_modules\\\\webpack\\\\lib\\\\NormalModule.js:295:3)\\n    at NormalModule.build (D:\\\\JavaScript Projects\\\\JavaScript Projects\\\\The Complete JavaScript Course 2019\\\\Forkify\\\\node_modules\\\\webpack\\\\lib\\\\NormalModule.js:446:15)\\n    at Compilation.buildModule (D:\\\\JavaScript Projects\\\\JavaScript Projects\\\\The Complete JavaScript Course 2019\\\\Forkify\\\\node_modules\\\\webpack\\\\lib\\\\Compilation.js:739:10)\\n    at D:\\\\JavaScript Projects\\\\JavaScript Projects\\\\The Complete JavaScript Course 2019\\\\Forkify\\\\node_modules\\\\webpack\\\\lib\\\\Compilation.js:981:14\\n    at D:\\\\JavaScript Projects\\\\JavaScript Projects\\\\The Complete JavaScript Course 2019\\\\Forkify\\\\node_modules\\\\webpack\\\\lib\\\\NormalModuleFactory.js:409:6\\n    at D:\\\\JavaScript Projects\\\\JavaScript Projects\\\\The Complete JavaScript Course 2019\\\\Forkify\\\\node_modules\\\\webpack\\\\lib\\\\NormalModuleFactory.js:155:13\\n    at AsyncSeriesWaterfallHook.eval [as callAsync] (eval at create (D:\\\\JavaScript Projects\\\\JavaScript Projects\\\\The Complete JavaScript Course 2019\\\\Forkify\\\\node_modules\\\\tapable\\\\lib\\\\HookCodeFactory.js:33:10), <anonymous>:6:1)\\n    at AsyncSeriesWaterfallHook.lazyCompileHook (D:\\\\JavaScript Projects\\\\JavaScript Projects\\\\The Complete JavaScript Course 2019\\\\Forkify\\\\node_modules\\\\tapable\\\\lib\\\\Hook.js:154:20)\\n    at D:\\\\JavaScript Projects\\\\JavaScript Projects\\\\The Complete JavaScript Course 2019\\\\Forkify\\\\node_modules\\\\webpack\\\\lib\\\\NormalModuleFactory.js:138:29\\n    at D:\\\\JavaScript Projects\\\\JavaScript Projects\\\\The Complete JavaScript Course 2019\\\\Forkify\\\\node_modules\\\\webpack\\\\lib\\\\NormalModuleFactory.js:346:9\\n    at processTicksAndRejections (internal/process/task_queues.js:75:11)\");//# sourceURL=[module]\n//# sourceMappingURL=data:application/json;charset=utf-8;base64,eyJ2ZXJzaW9uIjozLCJmaWxlIjoiLi9zcmMvanMvaW5kZXguanMuanMiLCJzb3VyY2VzIjpbXSwibWFwcGluZ3MiOiIiLCJzb3VyY2VSb290IjoiIn0=\n//# sourceURL=webpack-internal:///./src/js/index.js\n");
+"use strict";
+eval("__webpack_require__.r(__webpack_exports__);\n/* harmony import */ var _view_base__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ./view/base */ \"./src/js/view/base.js\");\n/* harmony import */ var _model_Search__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ./model/Search */ \"./src/js/model/Search.js\");\n/* harmony import */ var _model_Recipe__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ./model/Recipe */ \"./src/js/model/Recipe.js\");\nfunction asyncGeneratorStep(gen, resolve, reject, _next, _throw, key, arg) { try { var info = gen[key](arg); var value = info.value; } catch (error) { reject(error); return; } if (info.done) { resolve(value); } else { Promise.resolve(value).then(_next, _throw); } }\n\nfunction _asyncToGenerator(fn) { return function () { var self = this, args = arguments; return new Promise(function (resolve, reject) { var gen = fn.apply(self, args); function _next(value) { asyncGeneratorStep(gen, resolve, reject, _next, _throw, \"next\", value); } function _throw(err) { asyncGeneratorStep(gen, resolve, reject, _next, _throw, \"throw\", err); } _next(undefined); }); }; }\n\n\n\n\nvar state = {};\n\nvar controlSearch =\n/*#__PURE__*/\nfunction () {\n  var _ref = _asyncToGenerator(\n  /*#__PURE__*/\n  regeneratorRuntime.mark(function _callee() {\n    var searchView, query, recipes;\n    return regeneratorRuntime.wrap(function _callee$(_context) {\n      while (1) {\n        switch (_context.prev = _context.next) {\n          case 0:\n            _context.next = 2;\n            return __webpack_require__.e(/*! import() */ 0).then(__webpack_require__.bind(null, /*! ./view/searchView */ \"./src/js/view/searchView.js\"));\n\n          case 2:\n            searchView = _context.sent;\n            query = searchView.getInput();\n\n            if (!query) {\n              _context.next = 14;\n              break;\n            }\n\n            searchView.renderLoader();\n            state.search = new _model_Search__WEBPACK_IMPORTED_MODULE_1__[\"default\"](query);\n            _context.next = 9;\n            return state.search.getResult();\n\n          case 9:\n            recipes = state.search.result;\n            searchView.hideLoader();\n            searchView.renderResults(recipes);\n            searchView.clearInput();\n            document.querySelectorAll('.results__link').forEach(function (elm) {\n              elm.addEventListener('click', function (e) {\n                e.preventDefault();\n                new _model_Recipe__WEBPACK_IMPORTED_MODULE_2__[\"default\"](elm.href);\n              });\n            });\n\n          case 14:\n          case \"end\":\n            return _context.stop();\n        }\n      }\n    }, _callee);\n  }));\n\n  return function controlSearch() {\n    return _ref.apply(this, arguments);\n  };\n}();\n\nvar form = _view_base__WEBPACK_IMPORTED_MODULE_0__[\"DOM\"].searchForm;\nform.addEventListener('submit', function (e) {\n  e.preventDefault();\n  controlSearch();\n});//# sourceURL=[module]\n//# sourceMappingURL=data:application/json;charset=utf-8;base64,eyJ2ZXJzaW9uIjozLCJmaWxlIjoiLi9zcmMvanMvaW5kZXguanMuanMiLCJzb3VyY2VzIjpbIndlYnBhY2s6Ly8vLi9zcmMvanMvaW5kZXguanM/N2JhNSJdLCJzb3VyY2VzQ29udGVudCI6WyJpbXBvcnQgeyBET00gfSBmcm9tICcuL3ZpZXcvYmFzZSc7XHJcbmltcG9ydCBTZWFyY2ggZnJvbSAnLi9tb2RlbC9TZWFyY2gnO1xyXG5pbXBvcnQgUmVjaXBlIGZyb20gJy4vbW9kZWwvUmVjaXBlJztcclxuXHJcbmNvbnN0IHN0YXRlID0ge307XHJcblxyXG5jb25zdCBjb250cm9sU2VhcmNoID0gYXN5bmMgKCkgPT4ge1xyXG4gIGNvbnN0IHNlYXJjaFZpZXcgPSBhd2FpdCBpbXBvcnQoJy4vdmlldy9zZWFyY2hWaWV3Jyk7XHJcbiAgY29uc3QgcXVlcnkgPSBzZWFyY2hWaWV3LmdldElucHV0KCk7XHJcblxyXG4gIGlmIChxdWVyeSkge1xyXG4gICAgc2VhcmNoVmlldy5yZW5kZXJMb2FkZXIoKTtcclxuXHJcbiAgICBzdGF0ZS5zZWFyY2ggPSBuZXcgU2VhcmNoKHF1ZXJ5KTtcclxuICAgIGF3YWl0IHN0YXRlLnNlYXJjaC5nZXRSZXN1bHQoKTtcclxuICAgIGNvbnN0IHJlY2lwZXMgPSBzdGF0ZS5zZWFyY2gucmVzdWx0O1xyXG5cclxuICAgIHNlYXJjaFZpZXcuaGlkZUxvYWRlcigpO1xyXG5cclxuICAgIHNlYXJjaFZpZXcucmVuZGVyUmVzdWx0cyhyZWNpcGVzKTtcclxuXHJcbiAgICBzZWFyY2hWaWV3LmNsZWFySW5wdXQoKTtcclxuXHJcbiAgICBkb2N1bWVudC5xdWVyeVNlbGVjdG9yQWxsKCcucmVzdWx0c19fbGluaycpLmZvckVhY2goZWxtID0+IHtcclxuICAgICAgZWxtLmFkZEV2ZW50TGlzdGVuZXIoJ2NsaWNrJywgZSA9PiB7XHJcbiAgICAgICAgZS5wcmV2ZW50RGVmYXVsdCgpO1xyXG4gICAgICAgIG5ldyBSZWNpcGUoZWxtLmhyZWYpO1xyXG4gICAgICB9KTtcclxuICAgIH0pO1xyXG4gIH1cclxufTtcclxuXHJcbmNvbnN0IGZvcm0gPSBET00uc2VhcmNoRm9ybTtcclxuZm9ybS5hZGRFdmVudExpc3RlbmVyKCdzdWJtaXQnLCBlID0+IHtcclxuICBlLnByZXZlbnREZWZhdWx0KCk7XHJcbiAgY29udHJvbFNlYXJjaCgpO1xyXG59KTtcclxuXHJcblxyXG5cclxuIl0sIm1hcHBpbmdzIjoiOzs7Ozs7OztBQUFBO0FBQ0E7QUFDQTtBQUVBO0FBQ0E7QUFDQTtBQUFBO0FBQUE7QUFBQTtBQUFBO0FBQUE7QUFBQTtBQUFBO0FBQUE7QUFBQTtBQUFBO0FBQUE7QUFBQTtBQUNBO0FBREE7QUFDQTtBQUNBO0FBQ0E7QUFIQTtBQUFBO0FBQUE7QUFBQTtBQUNBO0FBSUE7QUFFQTtBQVBBO0FBQUE7QUFDQTtBQURBO0FBU0E7QUFFQTtBQUVBO0FBRUE7QUFFQTtBQUNBO0FBQ0E7QUFDQTtBQUNBO0FBQ0E7QUFDQTtBQXZCQTtBQUFBO0FBQUE7QUFBQTtBQUFBO0FBQUE7QUFBQTtBQUNBO0FBREE7QUFBQTtBQUFBO0FBQUE7QUFDQTtBQXlCQTtBQUNBO0FBQ0E7QUFDQTtBQUNBIiwic291cmNlUm9vdCI6IiJ9\n//# sourceURL=webpack-internal:///./src/js/index.js\n");
+
+/***/ }),
+
+/***/ "./src/js/model/Recipe.js":
+/*!********************************!*\
+  !*** ./src/js/model/Recipe.js ***!
+  \********************************/
+/*! exports provided: default */
+/***/ (function(module, __webpack_exports__, __webpack_require__) {
+
+"use strict";
+eval("__webpack_require__.r(__webpack_exports__);\n/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, \"default\", function() { return Recipe; });\nfunction asyncGeneratorStep(gen, resolve, reject, _next, _throw, key, arg) { try { var info = gen[key](arg); var value = info.value; } catch (error) { reject(error); return; } if (info.done) { resolve(value); } else { Promise.resolve(value).then(_next, _throw); } }\n\nfunction _asyncToGenerator(fn) { return function () { var self = this, args = arguments; return new Promise(function (resolve, reject) { var gen = fn.apply(self, args); function _next(value) { asyncGeneratorStep(gen, resolve, reject, _next, _throw, \"next\", value); } function _throw(err) { asyncGeneratorStep(gen, resolve, reject, _next, _throw, \"throw\", err); } _next(undefined); }); }; }\n\nfunction _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError(\"Cannot call a class as a function\"); } }\n\nfunction _defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if (\"value\" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } }\n\nfunction _createClass(Constructor, protoProps, staticProps) { if (protoProps) _defineProperties(Constructor.prototype, protoProps); if (staticProps) _defineProperties(Constructor, staticProps); return Constructor; }\n\nvar Recipe =\n/*#__PURE__*/\nfunction () {\n  function Recipe(id) {\n    _classCallCheck(this, Recipe);\n\n    this.id = id.slice(-5, id.length);\n    this.getRecipe();\n  }\n\n  _createClass(Recipe, [{\n    key: \"getRecipe\",\n    value: function () {\n      var _getRecipe = _asyncToGenerator(\n      /*#__PURE__*/\n      regeneratorRuntime.mark(function _callee() {\n        var request;\n        return regeneratorRuntime.wrap(function _callee$(_context) {\n          while (1) {\n            switch (_context.prev = _context.next) {\n              case 0:\n                _context.prev = 0;\n                _context.next = 3;\n                return fetch(\"https://forkify-api.herokuapp.com/api/get?rId=\".concat(this.id), {\n                  method: 'GET'\n                }).then(function (response) {\n                  if (response.status >= 200 && response.status < 300) {\n                    return response.json();\n                  } else throw new Error('Result not found.');\n                }).then(function (result) {\n                  console.log(result);\n                })[\"catch\"](function (error) {\n                  //Response Error\n                  console.log(error);\n                });\n\n              case 3:\n                request = _context.sent;\n                _context.next = 9;\n                break;\n\n              case 6:\n                _context.prev = 6;\n                _context.t0 = _context[\"catch\"](0);\n                //Network Error\n                console.log(_context.t0);\n\n              case 9:\n              case \"end\":\n                return _context.stop();\n            }\n          }\n        }, _callee, this, [[0, 6]]);\n      }));\n\n      function getRecipe() {\n        return _getRecipe.apply(this, arguments);\n      }\n\n      return getRecipe;\n    }()\n  }]);\n\n  return Recipe;\n}();\n\n//# sourceURL=[module]\n//# sourceMappingURL=data:application/json;charset=utf-8;base64,eyJ2ZXJzaW9uIjozLCJmaWxlIjoiLi9zcmMvanMvbW9kZWwvUmVjaXBlLmpzLmpzIiwic291cmNlcyI6WyJ3ZWJwYWNrOi8vLy4vc3JjL2pzL21vZGVsL1JlY2lwZS5qcz84ZTgwIl0sInNvdXJjZXNDb250ZW50IjpbImV4cG9ydCBkZWZhdWx0IGNsYXNzIFJlY2lwZSB7XHJcbiAgY29uc3RydWN0b3IoaWQpIHtcclxuICAgIHRoaXMuaWQgPSBpZC5zbGljZSgtNSwgaWQubGVuZ3RoKTtcclxuICAgIHRoaXMuZ2V0UmVjaXBlKCk7XHJcbiAgfVxyXG5cclxuICBhc3luYyBnZXRSZWNpcGUoKSB7XHJcbiAgICB0cnkge1xyXG4gICAgICBjb25zdCByZXF1ZXN0ID0gYXdhaXQgZmV0Y2goXHJcbiAgICAgICAgYGh0dHBzOi8vZm9ya2lmeS1hcGkuaGVyb2t1YXBwLmNvbS9hcGkvZ2V0P3JJZD0ke3RoaXMuaWR9YCxcclxuICAgICAgICB7XHJcbiAgICAgICAgICBtZXRob2Q6ICdHRVQnLFxyXG4gICAgICAgIH0sXHJcbiAgICAgIClcclxuICAgICAgLnRoZW4gKHJlc3BvbnNlID0+IHtcclxuICAgICAgICBpZihyZXNwb25zZS5zdGF0dXMgPj0gMjAwICYmIHJlc3BvbnNlLnN0YXR1cyA8IDMwMCkge1xyXG4gICAgICAgICAgcmV0dXJuIHJlc3BvbnNlLmpzb24oKTtcclxuICAgICAgICB9XHJcbiAgICAgICAgZWxzZSB0aHJvdyBuZXcgRXJyb3IoJ1Jlc3VsdCBub3QgZm91bmQuJyk7XHJcbiAgICAgIH0pXHJcbiAgICAgIC50aGVuIChyZXN1bHQgPT4ge1xyXG4gICAgICAgIGNvbnNvbGUubG9nKHJlc3VsdCk7XHJcbiAgICAgIH0pXHJcbiAgICAgIC5jYXRjaCAoZXJyb3IgPT4ge1xyXG4gICAgICAgIC8vUmVzcG9uc2UgRXJyb3JcclxuICAgICAgICBjb25zb2xlLmxvZyhlcnJvcik7XHJcbiAgICAgIH0pXHJcbiAgICB9IGNhdGNoIChlcnJvcikge1xyXG4gICAgICAvL05ldHdvcmsgRXJyb3JcclxuICAgICAgY29uc29sZS5sb2coZXJyb3IpO1xyXG4gICAgfVxyXG4gIH1cclxufVxyXG4iXSwibWFwcGluZ3MiOiI7Ozs7Ozs7Ozs7OztBQUFBOzs7QUFDQTtBQUFBO0FBQ0E7QUFBQTtBQUNBO0FBQ0E7QUFDQTs7Ozs7Ozs7Ozs7Ozs7QUFHQTtBQUdBO0FBREE7QUFLQTtBQUNBO0FBQ0E7QUFFQTtBQUVBO0FBQ0E7QUFFQTtBQUNBO0FBQ0E7QUFDQTs7QUFuQkE7Ozs7Ozs7QUFvQkE7QUFDQTtBQUNBOzs7Ozs7Ozs7Ozs7Ozs7Ozs7OzsiLCJzb3VyY2VSb290IjoiIn0=\n//# sourceURL=webpack-internal:///./src/js/model/Recipe.js\n");
+
+/***/ }),
+
+/***/ "./src/js/model/Search.js":
+/*!********************************!*\
+  !*** ./src/js/model/Search.js ***!
+  \********************************/
+/*! exports provided: default */
+/***/ (function(module, __webpack_exports__, __webpack_require__) {
+
+"use strict";
+eval("__webpack_require__.r(__webpack_exports__);\n/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, \"default\", function() { return Search; });\nfunction asyncGeneratorStep(gen, resolve, reject, _next, _throw, key, arg) { try { var info = gen[key](arg); var value = info.value; } catch (error) { reject(error); return; } if (info.done) { resolve(value); } else { Promise.resolve(value).then(_next, _throw); } }\n\nfunction _asyncToGenerator(fn) { return function () { var self = this, args = arguments; return new Promise(function (resolve, reject) { var gen = fn.apply(self, args); function _next(value) { asyncGeneratorStep(gen, resolve, reject, _next, _throw, \"next\", value); } function _throw(err) { asyncGeneratorStep(gen, resolve, reject, _next, _throw, \"throw\", err); } _next(undefined); }); }; }\n\nfunction _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError(\"Cannot call a class as a function\"); } }\n\nfunction _defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if (\"value\" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } }\n\nfunction _createClass(Constructor, protoProps, staticProps) { if (protoProps) _defineProperties(Constructor.prototype, protoProps); if (staticProps) _defineProperties(Constructor, staticProps); return Constructor; }\n\nvar Search =\n/*#__PURE__*/\nfunction () {\n  function Search(query) {\n    _classCallCheck(this, Search);\n\n    this.query = query;\n  }\n\n  _createClass(Search, [{\n    key: \"getResult\",\n    value: function () {\n      var _getResult = _asyncToGenerator(\n      /*#__PURE__*/\n      regeneratorRuntime.mark(function _callee() {\n        var _this = this;\n\n        var request;\n        return regeneratorRuntime.wrap(function _callee$(_context) {\n          while (1) {\n            switch (_context.prev = _context.next) {\n              case 0:\n                _context.prev = 0;\n                _context.next = 3;\n                return fetch(\"https://forkify-api.herokuapp.com/api/search?q=\".concat(this.query), {\n                  method: 'GET'\n                }).then(function (response) {\n                  if (response.status >= 200 && response.status < 300) return response.json();else throw new Error('Result not found.');\n                }).then(function (result) {\n                  _this.result = result.recipes;\n                })[\"catch\"](function (error) {\n                  //Response Error\n                  console.log(error);\n                });\n\n              case 3:\n                request = _context.sent;\n                _context.next = 9;\n                break;\n\n              case 6:\n                _context.prev = 6;\n                _context.t0 = _context[\"catch\"](0);\n                //Network Error\n                console.log(_context.t0);\n\n              case 9:\n              case \"end\":\n                return _context.stop();\n            }\n          }\n        }, _callee, this, [[0, 6]]);\n      }));\n\n      function getResult() {\n        return _getResult.apply(this, arguments);\n      }\n\n      return getResult;\n    }()\n  }]);\n\n  return Search;\n}();\n\n//# sourceURL=[module]\n//# sourceMappingURL=data:application/json;charset=utf-8;base64,eyJ2ZXJzaW9uIjozLCJmaWxlIjoiLi9zcmMvanMvbW9kZWwvU2VhcmNoLmpzLmpzIiwic291cmNlcyI6WyJ3ZWJwYWNrOi8vLy4vc3JjL2pzL21vZGVsL1NlYXJjaC5qcz85YmMwIl0sInNvdXJjZXNDb250ZW50IjpbImV4cG9ydCBkZWZhdWx0IGNsYXNzIFNlYXJjaCB7XHJcbiAgY29uc3RydWN0b3IocXVlcnkpIHtcclxuICAgIHRoaXMucXVlcnkgPSBxdWVyeTtcclxuICB9XHJcblxyXG4gIGFzeW5jIGdldFJlc3VsdCgpIHtcclxuICAgIHRyeSB7XHJcbiAgICAgIGNvbnN0IHJlcXVlc3QgPSBhd2FpdCBmZXRjaChcclxuICAgICAgICBgaHR0cHM6Ly9mb3JraWZ5LWFwaS5oZXJva3VhcHAuY29tL2FwaS9zZWFyY2g/cT0ke3RoaXMucXVlcnl9YCxcclxuICAgICAgICB7XHJcbiAgICAgICAgICBtZXRob2Q6ICdHRVQnLFxyXG4gICAgICAgIH0sXHJcbiAgICAgIClcclxuICAgICAgICAudGhlbihyZXNwb25zZSA9PiB7XHJcbiAgICAgICAgICBpZiAocmVzcG9uc2Uuc3RhdHVzID49IDIwMCAmJiByZXNwb25zZS5zdGF0dXMgPCAzMDApXHJcbiAgICAgICAgICAgIHJldHVybiByZXNwb25zZS5qc29uKCk7XHJcbiAgICAgICAgICBlbHNlIHRocm93IG5ldyBFcnJvcignUmVzdWx0IG5vdCBmb3VuZC4nKTtcclxuICAgICAgICB9KVxyXG4gICAgICAgIC50aGVuKHJlc3VsdCA9PiB7XHJcbiAgICAgICAgICB0aGlzLnJlc3VsdCA9IHJlc3VsdC5yZWNpcGVzO1xyXG4gICAgICAgIH0pXHJcbiAgICAgICAgLmNhdGNoKGVycm9yID0+IHtcclxuICAgICAgICAgIC8vUmVzcG9uc2UgRXJyb3JcclxuICAgICAgICAgIGNvbnNvbGUubG9nKGVycm9yKTtcclxuICAgICAgICB9KTtcclxuICAgIH0gY2F0Y2ggKGVycm9yKSB7XHJcbiAgICAgIC8vTmV0d29yayBFcnJvclxyXG4gICAgICBjb25zb2xlLmxvZyhlcnJvcik7XHJcbiAgICB9XHJcbiAgfVxyXG59XHJcbiJdLCJtYXBwaW5ncyI6Ijs7Ozs7Ozs7Ozs7O0FBQUE7OztBQUNBO0FBQUE7QUFDQTtBQUFBO0FBQ0E7QUFDQTs7Ozs7Ozs7Ozs7Ozs7OztBQUdBO0FBR0E7QUFEQTtBQUtBO0FBR0E7QUFFQTtBQUNBO0FBRUE7QUFDQTtBQUNBO0FBQ0E7O0FBbEJBOzs7Ozs7O0FBbUJBO0FBQ0E7QUFDQTs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Iiwic291cmNlUm9vdCI6IiJ9\n//# sourceURL=webpack-internal:///./src/js/model/Search.js\n");
+
+/***/ }),
+
+/***/ "./src/js/view/base.js":
+/*!*****************************!*\
+  !*** ./src/js/view/base.js ***!
+  \*****************************/
+/*! exports provided: DOM, renderLoader, hideLoader */
+/***/ (function(module, __webpack_exports__, __webpack_require__) {
+
+"use strict";
+eval("__webpack_require__.r(__webpack_exports__);\n/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, \"DOM\", function() { return DOM; });\n/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, \"renderLoader\", function() { return renderLoader; });\n/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, \"hideLoader\", function() { return hideLoader; });\nvar DOM = {\n  searchInput: document.querySelector('.search__field'),\n  searchForm: document.querySelector('.search'),\n  recipeList: document.querySelector('.results__list'),\n  recipeControl: document.querySelector('.results__pages')\n};\nvar renderLoader = function renderLoader() {\n  var loader = document.createElement('div');\n  loader.className = 'loader';\n  loader.innerHTML = \"<svg>\\n    <use href=\\\"img/icons.svg#icon-cw\\\"></use>\\n  </svg>\";\n  DOM.recipeList.prepend(loader);\n};\nvar hideLoader = function hideLoader() {\n  DOM.recipeList.querySelector('.loader').remove();\n};//# sourceURL=[module]\n//# sourceMappingURL=data:application/json;charset=utf-8;base64,eyJ2ZXJzaW9uIjozLCJmaWxlIjoiLi9zcmMvanMvdmlldy9iYXNlLmpzLmpzIiwic291cmNlcyI6WyJ3ZWJwYWNrOi8vLy4vc3JjL2pzL3ZpZXcvYmFzZS5qcz8yMGQ3Il0sInNvdXJjZXNDb250ZW50IjpbImV4cG9ydCBjb25zdCBET00gPSB7XHJcbiAgc2VhcmNoSW5wdXQ6IGRvY3VtZW50LnF1ZXJ5U2VsZWN0b3IoJy5zZWFyY2hfX2ZpZWxkJyksXHJcbiAgc2VhcmNoRm9ybTogZG9jdW1lbnQucXVlcnlTZWxlY3RvcignLnNlYXJjaCcpLFxyXG4gIHJlY2lwZUxpc3Q6IGRvY3VtZW50LnF1ZXJ5U2VsZWN0b3IoJy5yZXN1bHRzX19saXN0JyksXHJcbiAgcmVjaXBlQ29udHJvbDogZG9jdW1lbnQucXVlcnlTZWxlY3RvcignLnJlc3VsdHNfX3BhZ2VzJyksXHJcbn07XHJcblxyXG5leHBvcnQgY29uc3QgcmVuZGVyTG9hZGVyID0gKCkgPT4ge1xyXG4gIGNvbnN0IGxvYWRlciA9IGRvY3VtZW50LmNyZWF0ZUVsZW1lbnQoJ2RpdicpO1xyXG4gIGxvYWRlci5jbGFzc05hbWUgPSAnbG9hZGVyJ1xyXG4gIGxvYWRlci5pbm5lckhUTUwgPVxyXG4gIGA8c3ZnPlxyXG4gICAgPHVzZSBocmVmPVwiaW1nL2ljb25zLnN2ZyNpY29uLWN3XCI+PC91c2U+XHJcbiAgPC9zdmc+YDtcclxuICBET00ucmVjaXBlTGlzdC5wcmVwZW5kKGxvYWRlcik7XHJcbn1cclxuXHJcbmV4cG9ydCBjb25zdCBoaWRlTG9hZGVyID0gKCkgPT4ge1xyXG4gIERPTS5yZWNpcGVMaXN0LnF1ZXJ5U2VsZWN0b3IoJy5sb2FkZXInKS5yZW1vdmUoKTtcclxufVxyXG4iXSwibWFwcGluZ3MiOiJBQUFBO0FBQUE7QUFBQTtBQUFBO0FBQUE7QUFDQTtBQUNBO0FBQ0E7QUFDQTtBQUpBO0FBT0E7QUFDQTtBQUNBO0FBQ0E7QUFJQTtBQUNBO0FBRUE7QUFDQTtBQUNBIiwic291cmNlUm9vdCI6IiJ9\n//# sourceURL=webpack-internal:///./src/js/view/base.js\n");
 
 /***/ }),
 
