@@ -4,18 +4,19 @@ export const DOM = {
   recipeList: document.querySelector('.results__list'),
   recipeControl: document.querySelector('.results__pages'),
   recipe: document.querySelector('.recipe'),
+  shoppingList: document.querySelector('.shopping__list'),
 };
 
-export const renderLoader = () => {
+export const renderLoader = hook => {
   const loader = document.createElement('div');
   loader.className = 'loader'
   loader.innerHTML =
   `<svg>
     <use href="img/icons.svg#icon-cw"></use>
   </svg>`;
-  DOM.recipeList.prepend(loader);
+  hook.prepend(loader);
 }
 
-export const hideLoader = () => {
-  DOM.recipeList.querySelector('.loader').remove();
+export const hideLoader = hook => {
+  hook.querySelector('.loader').remove();
 }

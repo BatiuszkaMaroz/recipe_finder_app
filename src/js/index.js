@@ -1,6 +1,9 @@
 import { DOM } from './view/base';
 import Search from './model/Search';
 import Recipe from './model/Recipe';
+import List from './model/List';
+import * as recipeView from './view/recipeView';
+import * as listView from './view/listView';
 
 /***
  APP STATE
@@ -46,13 +49,16 @@ form.addEventListener('submit', e => {
  RECIPE CONTROLLER
  ***/
 const controlRecipe = async () => {
-  const recipeView = await import('./view/recipeView');
   recipeView.clearRecipe();
 
   const id = location.hash.replace('#', '');
 
   //Handle no id
   if(!id) return;
+
+  recipeView.highlight(id);
+
+  recipeView.renderLoader();
 
   state.recipe = new Recipe(id);
 
@@ -63,13 +69,67 @@ const controlRecipe = async () => {
     state.recipe.calcServings();
     state.recipe.parseIngredients();
 
+    recipeView.hideLoader();
     recipeView.renderRecipe(state.recipe);
   }
   catch (error) {
-    console.log(error);
+    // console.log(error);
+    ;
   }
 }
 
+/***
+ LIST CONTROLLER
+ ***/
+const controlList = () => {
+  if(!state.list) state.list = new List();
+
+  state.recipe.ingredients.forEach(ing => {
+    const newItem = state.list.addItem(ing.count, ing.unit, ing.ingredient);
+    listView.renderItem(newItem);
+  })
+}
+
+/***
+ LIKES CONTROLLER
+ ***/
+
+
 ['load', 'hashchange'].forEach(event => window.addEventListener(event, controlRecipe));
 
+DOM.recipe.addEventListener('click', event => {
+  try {
+    if (event.target.matches('.recipe__btn--add, .recipe__btn--add *')) {
+      controlList();
+    }
+    else if(event.target.matches('.btn-tiny, btn-tiny *') && event.target.closest('.btn-tiny').dataset.sign === 'plus') {
+      state.recipe.updateServings('inc');
+      recipeView.updateServings(state.recipe);
+      recipeView.recipeListUpdate(state.recipe);
+    }
+    else if (event.target.matches('.btn-tiny, btn-tiny *') &&  event.target.closest('.btn-tiny').dataset.sign === 'minus') {
+      state.recipe.updateServings('dec');
+      recipeView.updateServings(state.recipe);
+      recipeView.recipeListUpdate(state.recipe);
+    }
+    else if (event.target.matches('.recipe__love, .recipe__love *')) {
+      console.log('a')
+    }
+  }
+  catch (e) {
+    console.log(e);
+  }
+});
 
+DOM.shoppingList.addEventListener('click', event => {
+  const id = event.target.closest('li').dataset.itemid;
+
+  if(event.target.matches('.shopping__delete, .shopping__delete *')) {
+    state.list.deleteItem(id);
+    listView.deleteItem(id);
+  }
+  else if (event.target.matches('.shopping__count-value')) {
+    const val = parseFloat(event.target.value);
+    state.list.updateCount(id, val);
+  }
+})

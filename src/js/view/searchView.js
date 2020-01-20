@@ -8,8 +8,8 @@ export const getInput = () => DOM.searchInput.value;
 
 export const clearInput = () => (DOM.searchInput.value = '');
 
-export const renderLoader = _renderLoader;
-export const hideLoader = _hideLoader;
+export const renderLoader = _renderLoader.bind(this, DOM.recipeList);
+export const hideLoader = _hideLoader.bind(this, DOM.recipeList);
 
 //--------------------\/--------------------
 
