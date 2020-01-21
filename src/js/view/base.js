@@ -7,6 +7,7 @@ export const DOM = {
   shoppingList: document.querySelector('.shopping__list'),
   likesList: document.querySelector('.likes__list'),
   likesField: document.querySelector('.likes__field'),
+  executor: document.querySelector('.executor'),
 };
 
 export const renderLoader = hook => {

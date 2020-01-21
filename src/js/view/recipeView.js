@@ -116,7 +116,7 @@ export const recipeListUpdate = recipe => {
 
   recipe.ingredients.forEach(elm => {
     const recipeItem = `
-          <li class="recipe__item">
+          <li class="recipe__item" data-itemid="${elm.id}">
             <svg class="recipe__icon">
               <use href="img/icons.svg#icon-check"></use>
             </svg>

@@ -29,3 +29,7 @@ export const deleteItem = id => {
 
   item.remove();
 };
+
+export const deleteAll = () => {
+  DOM.shoppingList.innerHTML = '';
+}

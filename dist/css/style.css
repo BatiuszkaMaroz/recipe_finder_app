@@ -407,6 +407,8 @@ body {
     list-style: none;
     margin-bottom: 3rem; }
   .recipe__item {
+    backface-visibility: hidden;
+    transition: .05s ease-out;
     display: flex; }
   .recipe__icon {
     height: 1.8rem;
@@ -490,3 +492,20 @@ body {
   .shopping__item:hover .shopping__delete {
     opacity: 1;
     visibility: visible; }
+
+
+    /* --------------------------------------- */
+    .shopping:hover > button {
+      visibility: visible;
+      opacity: 1;
+      transform: translateY(0);
+    }
+    .executor {
+      position: relative;
+      margin: 0 auto;
+      margin-bottom: 1rem;
+    }
+    .recipe__item:hover {
+      transform: scale(1.05);
+      cursor: pointer;
+    }

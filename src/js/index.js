@@ -84,10 +84,8 @@ const controlRecipe = async () => {
  LIST CONTROLLER
  ***/
 const controlList = () => {
-  if (!state.list) state.list = new List();
-
   state.recipe.ingredients.forEach(ing => {
-    const newItem = state.list.addItem(ing.count, ing.unit, ing.ingredient);
+    const newItem = state.list.addItem(ing.id, ing.count, ing.unit, ing.ingredient);
     listView.renderItem(newItem);
   });
 };
@@ -127,17 +125,28 @@ const controlLike = async () => {
   window.addEventListener(event, controlRecipe),
 );
 
+
+/***
+ ON LOAD
+ ***/
 window.addEventListener('load', () => {
   state.likes = new Likes();
   state.likes.readStorage();
 
-  if(state.likes.likes) {
-    state.likes.likes.forEach(like => {
-      likesView.renderLike(like);
-    });
-  }
+  state.likes.likes.forEach(like => {
+    likesView.renderLike(like);
+  });
 
   likesView.toggleLikeMenu(state.likes.getNumOfLikes());
+
+  //------------------------
+
+  state.list = new List();
+  state.list.readStorage();
+
+  state.list.items.forEach(item => {
+    listView.renderItem(item);
+  })
 });
 
 DOM.recipe.addEventListener('click', event => {
@@ -155,7 +164,19 @@ DOM.recipe.addEventListener('click', event => {
       recipeView.updateServings(state.recipe);
       recipeView.recipeListUpdate(state.recipe);
     } else if (event.target.matches('.recipe__love, .recipe__love *')) {
+
+      //ADD TO FAV
+
       controlLike();
+    } else if (event.target.matches('.recipe__item, .recipe__item *')) {
+
+      //SINGLE INGREDIENT
+
+      const ingredient = state.recipe.getIngredient(event.target.closest('li').dataset.itemid);
+      state.list.addItem(ingredient.id, ingredient.count, ingredient.unit, ingredient.ingredient);
+      listView.renderItem(ingredient);
+
+      state.list.readStorage();
     }
   } catch (e) {
     console.log(e);
@@ -173,3 +194,8 @@ DOM.shoppingList.addEventListener('click', event => {
     state.list.updateCount(id, val);
   }
 });
+
+DOM.executor.addEventListener('click', () => {
+  state.list.clearList();
+  listView.deleteAll();
+})

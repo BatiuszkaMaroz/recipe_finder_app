@@ -1,3 +1,5 @@
+import uniqid from 'uniqid';
+
 export default class Recipe {
   constructor(id) {
     this.id = id;
@@ -119,6 +121,8 @@ export default class Recipe {
         };
       }
 
+      objIng.id = uniqid();
+
       objIng.ingredient = objIng.ingredient.toLowerCase();
       return objIng;
     });
@@ -135,5 +139,9 @@ export default class Recipe {
     })
 
     this.servings = newServings;
+  }
+
+  getIngredient(id) {
+    return this.ingredients.find(elm => elm.id === id);
   }
 }
