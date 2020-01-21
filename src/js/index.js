@@ -2,8 +2,10 @@ import { DOM } from './view/base';
 import Search from './model/Search';
 import Recipe from './model/Recipe';
 import List from './model/List';
+import Likes from './model/Likes';
 import * as recipeView from './view/recipeView';
 import * as listView from './view/listView';
+import * as likesView from './view/likesView';
 
 /***
  APP STATE
@@ -31,8 +33,7 @@ const controlSearch = async () => {
       searchView.renderResults(recipes);
 
       searchView.clearInput();
-    }
-    catch (error) {
+    } catch (error) {
       console.log(error);
       searchView.clearList();
     }
@@ -54,7 +55,7 @@ const controlRecipe = async () => {
   const id = location.hash.replace('#', '');
 
   //Handle no id
-  if(!id) return;
+  if (!id) return;
 
   recipeView.highlight(id);
 
@@ -70,53 +71,93 @@ const controlRecipe = async () => {
     state.recipe.parseIngredients();
 
     recipeView.hideLoader();
-    recipeView.renderRecipe(state.recipe);
-  }
-  catch (error) {
+    recipeView.renderRecipe(
+      state.recipe,
+      (state.likes ? state.likes.isLiked(id) : false)
+    );
+  } catch (error) {
     // console.log(error);
-    ;
   }
-}
+};
 
 /***
  LIST CONTROLLER
  ***/
 const controlList = () => {
-  if(!state.list) state.list = new List();
+  if (!state.list) state.list = new List();
 
   state.recipe.ingredients.forEach(ing => {
     const newItem = state.list.addItem(ing.count, ing.unit, ing.ingredient);
     listView.renderItem(newItem);
-  })
-}
+  });
+};
 
 /***
  LIKES CONTROLLER
  ***/
+const controlLike = async () => {
+  const curID = state.recipe.id;
 
+  //user has NOT liked
+  if (!state.likes.isLiked(curID)) {
+    const newLike = state.likes.addLike(
+      curID,
+      state.recipe.title,
+      state.recipe.author,
+      state.recipe.image,
+    );
 
-['load', 'hashchange'].forEach(event => window.addEventListener(event, controlRecipe));
+    likesView.renderLike(newLike);
+
+    likesView.toggleLikeMenu(state.likes.getNumOfLikes());
+    likesView.toggleIcon(true);
+  }
+  //user has liked
+  else {
+    state.likes.deleteLike(curID);
+
+    likesView.deleteLike(curID);
+
+    likesView.toggleLikeMenu(state.likes.getNumOfLikes());
+    likesView.toggleIcon(false);
+  }
+};
+
+['load', 'hashchange'].forEach(event =>
+  window.addEventListener(event, controlRecipe),
+);
+
+window.addEventListener('load', () => {
+  state.likes = new Likes();
+  state.likes.readStorage();
+
+  if(state.likes.likes) {
+    state.likes.likes.forEach(like => {
+      likesView.renderLike(like);
+    });
+  }
+
+  likesView.toggleLikeMenu(state.likes.getNumOfLikes());
+});
 
 DOM.recipe.addEventListener('click', event => {
   try {
     if (event.target.matches('.recipe__btn--add, .recipe__btn--add *')) {
       controlList();
-    }
-    else if(event.target.matches('.btn-tiny, btn-tiny *') && event.target.closest('.btn-tiny').dataset.sign === 'plus') {
-      state.recipe.updateServings('inc');
+    } else if (event.target.matches('.btn-tiny, .btn-tiny *')) {
+      state.recipe.updateServings(
+        `${
+          event.target.closest('.btn-tiny').dataset.sign === 'plus'
+            ? 'inc'
+            : 'dec'
+        }`,
+      );
       recipeView.updateServings(state.recipe);
       recipeView.recipeListUpdate(state.recipe);
+    } else if (event.target.matches('.recipe__love, .recipe__love *')) {
+      controlLike();
     }
-    else if (event.target.matches('.btn-tiny, btn-tiny *') &&  event.target.closest('.btn-tiny').dataset.sign === 'minus') {
-      state.recipe.updateServings('dec');
-      recipeView.updateServings(state.recipe);
-      recipeView.recipeListUpdate(state.recipe);
-    }
-    else if (event.target.matches('.recipe__love, .recipe__love *')) {
-      console.log('a')
-    }
-  }
-  catch (e) {
+  } catch (e) {
     console.log(e);
   }
 });
@@ -124,12 +165,11 @@ DOM.recipe.addEventListener('click', event => {
 DOM.shoppingList.addEventListener('click', event => {
   const id = event.target.closest('li').dataset.itemid;
 
-  if(event.target.matches('.shopping__delete, .shopping__delete *')) {
+  if (event.target.matches('.shopping__delete, .shopping__delete *')) {
     state.list.deleteItem(id);
     listView.deleteItem(id);
-  }
-  else if (event.target.matches('.shopping__count-value')) {
+  } else if (event.target.matches('.shopping__count-value')) {
     const val = parseFloat(event.target.value);
     state.list.updateCount(id, val);
   }
-})
+});

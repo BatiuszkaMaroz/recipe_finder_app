@@ -93,7 +93,7 @@ const renderRecipe = recipe => {
   DOM.recipeList.append(newElement);
 };
 
-const limitRecipeTitle = (title, limit = 17) => {
+export const limitRecipeTitle = (title, limit = 17) => {
   let shortTitle = [];
   if (title.length <= limit) return title;
   title.split(' ').reduce((pre, cur) => {

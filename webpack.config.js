@@ -13,7 +13,6 @@ module.exports = {
   devServer: {
     contentBase: './dist',
   },
-  devtool: 'cheap-module-eval-source-map',
   plugins: [
     // new CleanPlugin.CleanWebpackPlugin(),
     new HtmlWebpackPlugin({

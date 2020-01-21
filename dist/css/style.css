@@ -50,7 +50,6 @@ body {
   cursor: pointer;
   display: flex;
   align-items: center;
-  backface-visibility: hidden;
   transition: all .2s; }
   .btn:hover, .btn-small:hover {
     transform: scale(1.05); }
@@ -491,10 +490,3 @@ body {
   .shopping__item:hover .shopping__delete {
     opacity: 1;
     visibility: visible; }
-
-/* OWN EDIT !!! */
-.results {
-  display: flex;
-  flex-direction: column;
-  justify-content: space-between;
-}

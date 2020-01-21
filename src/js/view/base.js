@@ -5,6 +5,8 @@ export const DOM = {
   recipeControl: document.querySelector('.results__pages'),
   recipe: document.querySelector('.recipe'),
   shoppingList: document.querySelector('.shopping__list'),
+  likesList: document.querySelector('.likes__list'),
+  likesField: document.querySelector('.likes__field'),
 };
 
 export const renderLoader = hook => {

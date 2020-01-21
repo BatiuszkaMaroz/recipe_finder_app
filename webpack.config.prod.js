@@ -6,7 +6,7 @@ module.exports = {
   mode: 'production',
   entry: ['babel-polyfill', './src/js/index.js'],
   output: {
-    filename: '[contenthash].js',
+    filename: 'js/[contenthash].js',
     path: path.resolve(__dirname, 'dist'),
     publicPath: 'dist/',
   },
