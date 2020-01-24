@@ -11,6 +11,10 @@ export const clearInput = () => (DOM.searchInput.value = '');
 export const renderLoader = _renderLoader.bind(this, DOM.recipeList);
 export const hideLoader = _hideLoader.bind(this, DOM.recipeList);
 
+export const searchFail = () => {
+  DOM.recipeList.textContent = 'Fail';
+}
+
 //--------------------\/--------------------
 
 export const renderResults = (recipes, page = 1, resPerPage = 10) => {

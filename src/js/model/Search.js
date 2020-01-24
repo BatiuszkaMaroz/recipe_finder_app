@@ -11,18 +11,18 @@ export default class Search {
           method: 'GET',
         },
       )
-        .then(response => {
-          if (response.status >= 200 && response.status < 300)
-            return response.json();
-          else throw new Error('Result not found.');
-        })
-        .then(result => {
-          this.result = result.recipes;
-        })
-        .catch(error => {
-          //Response Error
-          console.log(error);
-        });
+      .then(response => {
+        if (response.status >= 200 && response.status < 300)
+          return response.json();
+        else throw new Error('Result not found.');
+      })
+      .then(result => {
+        this.result = result.recipes;
+      })
+      .catch(error => {
+        //Response Error
+        console.log(error);
+      });
     } catch (error) {
       //Network Error
       console.log(error);

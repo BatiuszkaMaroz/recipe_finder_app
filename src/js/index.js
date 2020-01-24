@@ -35,6 +35,7 @@ const controlSearch = async () => {
       searchView.clearInput();
     } catch (error) {
       console.log(error);
+      console.log('skur')
       searchView.clearList();
     }
   }
@@ -76,7 +77,7 @@ const controlRecipe = async () => {
       (state.likes ? state.likes.isLiked(id) : false)
     );
   } catch (error) {
-    // console.log(error);
+    console.log(error);
   }
 };
 
