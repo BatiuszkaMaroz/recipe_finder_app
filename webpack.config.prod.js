@@ -5,7 +5,7 @@ const HtmlWebpackPlugin = require('html-webpack-plugin');
 module.exports = {
   mode: 'production',
   entry: ['babel-polyfill', './src/js/index.js'],
-  output: {
+  output: {+
     filename: 'js/[contenthash].js',
     path: path.resolve(__dirname, 'dist'),
     publicPath: 'dist/',
